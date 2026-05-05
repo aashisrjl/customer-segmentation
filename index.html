@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Segmentation Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .result-label {
+            color: #666;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .cluster-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .buy-laptop-yes {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .buy-laptop-no {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #fee;
+            border-left: 5px solid #e74c3c;
+            padding: 15px;
+            border-radius: 6px;
+            color: #c0392b;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .probability-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .cluster-info {
+            background: #e8f5e9;
+            border-left: 5px solid #27ae60;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #2d5016;
+            line-height: 1.5;
+        }
+
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-results {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Customer Segmentation</h1>
+        <p class="subtitle">Predict customer cluster & laptop purchase likelihood</p>
+
+        <form id="predictionForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="gender">Gender *</label>
+                    <select id="gender" name="gender" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="ever_married">Ever Married *</label>
+                    <select id="ever_married" name="ever_married" required>
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="age">Age *</label>
+                    <input type="number" id="age" name="age" min="18" max="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="graduated">Graduated *</label>
+                    <select id="graduated" name="graduated" required>
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="profession">Profession *</label>
+                    <select id="profession" name="profession" required>
+                        <option value="">Select Profession</option>
+                        <option value="Artist">Artist</option>
+                        <option value="Doctor">Doctor</option>
+                        <option value="Engineer">Engineer</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Executive">Executive</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Homemaker">Homemaker</option>
+                        <option value="Lawyer">Lawyer</option>
+                        <option value="Marketing">Marketing</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="work_experience">Work Experience (years) *</label>
+                    <input type="number" id="work_experience" name="work_experience" min="0" max="60" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="spending_score">Spending Score *</label>
+                    <select id="spending_score" name="spending_score" required>
+                        <option value="">Select Spending Score</option>
+                        <option value="Low">Low</option>
+                        <option value="Average">Average</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="family_size">Family Size *</label>
+                    <input type="number" id="family_size" name="family_size" min="1" max="10" required>
+                </div>
+            </div>
+
+            <button type="submit">Predict</button>
+            <div class="loading" id="loading"></div>
+        </form>
+
+        <div class="error" id="error"></div>
+
+        <div class="modal-overlay" id="resultsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Prediction Results</h2>
+                    <button class="modal-close" id="closeModal">&times;</button>
+                </div>
+                
+                <div class="modal-results">
+                    <div class="result-item">
+                        <div class="result-label">Customer Cluster</div>
+                        <div class="result-value">
+                            <span class="cluster-badge" id="clusterResult">-</span>
+                        </div>
+                        <div class="cluster-info" id="clusterInfo"></div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">Buy Laptop Prediction</div>
+                        <div class="result-value" id="buyLaptopResult">-</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">Confidence Level</div>
+                        <div style="margin-top: 8px;">
+                            <span id="probabilityPercent" style="color: #667eea; font-weight: 600;">0%</span>
+                            <div class="probability-bar">
+                                <div class="probability-fill" id="probabilityFill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/predict';
+
+        // Cluster descriptions based on analysis
+        const clusterDescriptions = {
+            0: {
+                name: "Middle-Aged Professionals",
+                description: "Ages ~47, moderate work experience (2.8 yrs), family-oriented with 2-3 family members. 32% purchase laptops. Generally stable income earners.",
+                color: "#3498db"
+            },
+            1: {
+                name: "Young Singles",
+                description: "Ages ~37, experienced professionals (3.8 yrs), mostly single or small families (1-2 members). Very low laptop purchase rate (0%). Career-focused but not interested in laptops.",
+                color: "#e74c3c"
+            },
+            2: {
+                name: "Young Families",
+                description: "Ages ~26, low work experience (2.3 yrs), larger families (4+ members). Minimal laptop purchases (0.4%). Budget-conscious, family-focused.",
+                color: "#f39c12"
+            },
+            3: {
+                name: "General Population",
+                description: "Ages ~46, moderate experience (2.5 yrs), family-oriented (2-3 members). Moderate laptop purchase rate (27%). Largest segment representing diverse customers.",
+                color: "#9b59b6"
+            },
+            4: {
+                name: "Senior Buyers",
+                description: "Ages ~73, low work experience (1.2 yrs), small families (2 members). Highest laptop purchase rate (57.5%)! Senior citizens who actively purchase technology.",
+                color: "#27ae60"
+            }
+        };
+
+        const form = document.getElementById('predictionForm');
+        const errorDiv = document.getElementById('error');
+        const resultsModal = document.getElementById('resultsModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const loadingDiv = document.getElementById('loading');
+
+        // Close modal when X button is clicked
+        closeModalBtn.addEventListener('click', () => {
+            resultsModal.classList.remove('show');
+        });
+
+        // Close modal when clicking outside the modal content
+        resultsModal.addEventListener('click', (e) => {
+            if (e.target === resultsModal) {
+                resultsModal.classList.remove('show');
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorDiv.classList.remove('show');
+            resultsModal.classList.remove('show');
+            loadingDiv.textContent = 'Making prediction...';
+
+            const formData = new FormData(form);
+            const params = new URLSearchParams();
+
+            formData.forEach((value, key) => {
+                params.append(key, value);
+            });
+
+            try {
+                const response = await fetch(`${API_URL}?${params}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                loadingDiv.textContent = '';
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display results
+                displayResults(data);
+                resultsModal.classList.add('show');
+
+            } catch (error) {
+                loadingDiv.textContent = '';
+                console.error('Error:', error);
+                showError(error.message || 'Failed to get prediction. Make sure the API is running on http://localhost:8000');
+            }
+        });
+
+        function displayResults(data) {
+            const cluster = data.predicted_cluster;
+            const buyLaptop = data.predicted_buy_laptop;
+            const probability = (data.buy_laptop_probability * 100).toFixed(1);
+
+            // Get cluster info
+            const clusterInfo = clusterDescriptions[cluster];
+
+            document.getElementById('clusterResult').textContent = `Cluster ${cluster}`;
+            
+            // Display cluster description
+            if (clusterInfo) {
+                document.getElementById('clusterInfo').innerHTML = `
+                    <strong>${clusterInfo.name}</strong><br>
+                    ${clusterInfo.description}
+                `;
+            }
+            
+            const buyLaptopElement = document.getElementById('buyLaptopResult');
+            if (buyLaptop === 'Yes') {
+                buyLaptopElement.innerHTML = '<span class="buy-laptop-yes">✓ Yes</span>';
+            } else {
+                buyLaptopElement.innerHTML = '<span class="buy-laptop-no">✗ No</span>';
+            }
+
+            document.getElementById('probabilityPercent').textContent = `${probability}%`;
+            document.getElementById('probabilityFill').style.width = `${probability}%`;
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+    </script>
+</body>
+</html>

@@ -4,8 +4,11 @@ Endpoint: GET /predict?gender=...&ever_married=...&age=...&...
 """
 
 import pickle
+import os
 from fastapi import FastAPI, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 
 # Initialize FastAPI app
@@ -13,6 +16,15 @@ app = FastAPI(
     title="Customer Segmentation API",
     description="Real-time cluster prediction for customer data",
     version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Load trained models
@@ -123,14 +135,13 @@ def preprocess_exact(raw_row):
 
 @app.get("/")
 def home():
-    """Home endpoint with API documentation"""
+    """Serve the index.html file"""
+    html_file = os.path.join(os.path.dirname(__file__), 'index.html')
+    if os.path.exists(html_file):
+        return FileResponse(html_file, media_type="text/html")
     return {
         "status": "API Running",
-        "endpoints": {
-            "predict": "/predict",
-            "docs": "/docs",
-            "redoc": "/redoc"
-        }
+        "message": "index.html not found. Please ensure index.html is in the root directory"
     }
 
 @app.get("/predict")
