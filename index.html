@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Segmentation Predictor</title>
+    <title>M1 Purchase Predictor</title>
     <style>
         * {
             margin: 0;
@@ -17,50 +17,65 @@
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 20px;
+            align-items: flex-start;
+            padding: 24px 16px 40px;
         }
 
         .container {
             background: white;
             border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            max-width: 760px;
             width: 100%;
-            padding: 40px;
+            padding: 36px 40px 40px;
         }
 
         h1 {
             color: #333;
             margin-bottom: 10px;
             text-align: center;
-            font-size: 28px;
+            font-size: 26px;
         }
 
         .subtitle {
             color: #666;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 28px;
             font-size: 14px;
+            line-height: 1.45;
+        }
+
+        fieldset {
+            border: 1px solid #e4e4e4;
+            border-radius: 8px;
+            padding: 16px 16px 8px;
+            margin-bottom: 20px;
+        }
+
+        legend {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            padding: 0 8px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #333;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         input[type="text"],
         input[type="number"],
         select {
             width: 100%;
-            padding: 12px;
+            padding: 10px 12px;
             border: 2px solid #e0e0e0;
             border-radius: 6px;
             font-size: 14px;
@@ -78,16 +93,19 @@
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 16px;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 640px) {
             .form-row {
                 grid-template-columns: 1fr;
             }
+            .container {
+                padding: 24px 18px;
+            }
         }
 
-        button {
+        button[type="submit"] {
             width: 100%;
             padding: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -98,19 +116,19 @@
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
-        button:hover {
+        button[type="submit"]:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
 
-        button:active {
+        button[type="submit"]:active {
             transform: translateY(0);
         }
 
-        button:disabled {
+        button[type="submit"]:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
@@ -121,31 +139,7 @@
             color: #667eea;
             font-weight: 600;
             margin-top: 10px;
-        }
-
-        .results {
-            background: #f8f9fa;
-            border-left: 5px solid #667eea;
-            padding: 20px;
-            border-radius: 6px;
-            margin-top: 30px;
-            display: none;
-        }
-
-        .results.show {
-            display: block;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            min-height: 1.2em;
         }
 
         .result-item {
@@ -201,6 +195,8 @@
             color: #c0392b;
             margin-top: 20px;
             display: none;
+            font-size: 14px;
+            line-height: 1.45;
         }
 
         .error.show {
@@ -253,20 +249,18 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .modal-content {
             background: white;
             border-radius: 12px;
-            padding: 40px;
-            max-width: 500px;
+            padding: 36px;
+            max-width: 520px;
             width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
             animation: slideUp 0.3s ease;
         }
@@ -294,7 +288,7 @@
         .modal-header h2 {
             margin: 0;
             color: #333;
-            font-size: 24px;
+            font-size: 22px;
         }
 
         .modal-close {
@@ -304,8 +298,8 @@
             cursor: pointer;
             color: #999;
             padding: 0;
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -323,91 +317,186 @@
             flex-direction: column;
             gap: 20px;
         }
+
+        .hint {
+            font-size: 12px;
+            color: #888;
+            font-weight: 400;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎯 Customer Segmentation</h1>
-        <p class="subtitle">Predict customer cluster & laptop purchase likelihood</p>
+        <h1>Apple M1 purchase predictor</h1>
+        <p class="subtitle">Customer segment (K-Means) and M1 purchase likelihood. Fields match the <code>/predict</code> API; submit all ratings so the model sees your full profile.</p>
 
         <form id="predictionForm">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="gender">Gender *</label>
-                    <select id="gender" name="gender" required>
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
+            <fieldset>
+                <legend>Attitudes &amp; experience</legend>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="trust_apple">Trust Apple</label>
+                        <select id="trust_apple" name="trust_apple" required>
+                            <option value="">Select</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="user_pcmac">Primary device</label>
+                        <select id="user_pcmac" name="user_pcmac" required>
+                            <option value="">Select</option>
+                            <option value="Yes">Mac user</option>
+                            <option value="No">PC user</option>
+                        </select>
+                        <p class="hint">Same encoding as the survey: Yes = Mac, No = PC.</p>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label for="ever_married">Ever Married *</label>
-                    <select id="ever_married" name="ever_married" required>
-                        <option value="">Select Option</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="familiarity_m1">Familiar with M1</label>
+                        <select id="familiarity_m1" name="familiarity_m1" required>
+                            <option value="">Select</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="interest_computers">Interest in computers (1–10)</label>
+                        <input type="number" id="interest_computers" name="interest_computers" min="1" max="10" value="5" required>
+                    </div>
                 </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="age">Age *</label>
-                    <input type="number" id="age" name="age" min="18" max="100" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="age_computer">Years using computers</label>
+                        <input type="number" id="age_computer" name="age_computer" min="0" max="60" value="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appleproducts_count">Apple products owned</label>
+                        <input type="number" id="appleproducts_count" name="appleproducts_count" min="0" max="10" value="0" required>
+                    </div>
                 </div>
+            </fieldset>
 
-                <div class="form-group">
-                    <label for="graduated">Graduated *</label>
-                    <select id="graduated" name="graduated" required>
-                        <option value="">Select Option</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
+            <fieldset>
+                <legend>Feature importance (1–5)</legend>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="f_batterylife">Battery life</label>
+                        <input type="number" id="f_batterylife" name="f_batterylife" min="1" max="5" value="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="f_price">Price</label>
+                        <input type="number" id="f_price" name="f_price" min="1" max="5" value="3" required>
+                    </div>
                 </div>
-            </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="f_size">Size / portability</label>
+                        <input type="number" id="f_size" name="f_size" min="1" max="5" value="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="f_multitasking">Multitasking</label>
+                        <input type="number" id="f_multitasking" name="f_multitasking" min="1" max="5" value="3" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="f_noise">Noise / fan</label>
+                        <input type="number" id="f_noise" name="f_noise" min="1" max="5" value="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="f_performance">Performance</label>
+                        <input type="number" id="f_performance" name="f_performance" min="1" max="5" value="3" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="f_neural">Neural engine / ML</label>
+                        <input type="number" id="f_neural" name="f_neural" min="1" max="5" value="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="f_synergy">Ecosystem synergy</label>
+                        <input type="number" id="f_synergy" name="f_synergy" min="1" max="5" value="3" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="f_performanceloss">Performance vs Mac</label>
+                        <input type="number" id="f_performanceloss" name="f_performanceloss" min="1" max="5" value="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="m1_consideration">M1 consideration (1–10)</label>
+                        <input type="number" id="m1_consideration" name="m1_consideration" min="1" max="10" value="5" required>
+                    </div>
+                </div>
+            </fieldset>
 
-            <div class="form-row">
+            <fieldset>
+                <legend>Demographics (survey codes)</legend>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="age_group">Age group (code 1–10)</label>
+                        <input type="number" id="age_group" name="age_group" min="1" max="10" value="2" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="income_group">Income group (code)</label>
+                        <input type="number" id="income_group" name="income_group" min="1" max="10" value="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" required>
+                            <option value="Student" selected>Student</option>
+                            <option value="Employed">Employed</option>
+                            <option value="Self-Employed">Self-Employed</option>
+                            <option value="Unemployed">Unemployed</option>
+                            <option value="Retired">Retired</option>
+                            <option value="Student ant employed">Student ant employed</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label for="profession">Profession *</label>
-                    <select id="profession" name="profession" required>
-                        <option value="">Select Profession</option>
-                        <option value="Artist">Artist</option>
-                        <option value="Doctor">Doctor</option>
-                        <option value="Engineer">Engineer</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Executive">Executive</option>
+                    <label for="domain">Domain / field</label>
+                    <select id="domain" name="domain" required>
+                        <option value="IT &amp; Technology" selected>IT &amp; Technology</option>
+                        <option value="Science">Science</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Business">Business</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Education">Education</option>
                         <option value="Healthcare">Healthcare</option>
-                        <option value="Homemaker">Homemaker</option>
-                        <option value="Lawyer">Lawyer</option>
                         <option value="Marketing">Marketing</option>
+                        <option value="Arts &amp; Culture">Arts &amp; Culture</option>
+                        <option value="Hospitality">Hospitality</option>
+                        <option value="Politics">Politics</option>
+                        <option value="Social Sciences">Social Sciences</option>
+                        <option value="Administration &amp; Public Services">Administration &amp; Public Services</option>
+                        <option value="Economics">Economics</option>
+                        <option value="Law">Law</option>
+                        <option value="Logistics">Logistics</option>
+                        <option value="Agriculture">Agriculture</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Realestate">Realestate</option>
+                        <option value="Communication ">Communication </option>
+                        <option value="Consulting ">Consulting </option>
+                        <option value="Retired">Retired</option>
                     </select>
+                    <p class="hint">Values must match training data exactly (including trailing spaces where noted).</p>
                 </div>
+            </fieldset>
 
-                <div class="form-group">
-                    <label for="work_experience">Work Experience (years) *</label>
-                    <input type="number" id="work_experience" name="work_experience" min="0" max="60" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="spending_score">Spending Score *</label>
-                    <select id="spending_score" name="spending_score" required>
-                        <option value="">Select Spending Score</option>
-                        <option value="Low">Low</option>
-                        <option value="Average">Average</option>
-                        <option value="High">High</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="family_size">Family Size *</label>
-                    <input type="number" id="family_size" name="family_size" min="1" max="10" required>
-                </div>
-            </div>
-
-            <button type="submit">Predict</button>
+            <button type="submit">Predict cluster &amp; M1 purchase</button>
             <div class="loading" id="loading"></div>
         </form>
 
@@ -416,13 +505,13 @@
         <div class="modal-overlay" id="resultsModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Prediction Results</h2>
-                    <button class="modal-close" id="closeModal">&times;</button>
+                    <h2>Results</h2>
+                    <button type="button" class="modal-close" id="closeModal" aria-label="Close">&times;</button>
                 </div>
-                
+
                 <div class="modal-results">
                     <div class="result-item">
-                        <div class="result-label">Customer Cluster</div>
+                        <div class="result-label">Customer cluster</div>
                         <div class="result-value">
                             <span class="cluster-badge" id="clusterResult">-</span>
                         </div>
@@ -430,12 +519,12 @@
                     </div>
 
                     <div class="result-item">
-                        <div class="result-label">Buy Laptop Prediction</div>
-                        <div class="result-value" id="buyLaptopResult">-</div>
+                        <div class="result-label">M1 purchase prediction</div>
+                        <div class="result-value" id="buyM1Result">-</div>
                     </div>
 
                     <div class="result-item">
-                        <div class="result-label">Confidence Level</div>
+                        <div class="result-label">Estimated probability (purchase = Yes)</div>
                         <div style="margin-top: 8px;">
                             <span id="probabilityPercent" style="color: #667eea; font-weight: 600;">0%</span>
                             <div class="probability-bar">
@@ -449,34 +538,33 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8000/predict';
+        const API_PREDICT_URL = `${window.location.origin}/predict`;
 
-        // Cluster descriptions based on analysis
         const clusterDescriptions = {
             0: {
-                name: "Middle-Aged Professionals",
-                description: "Ages ~47, moderate work experience (2.8 yrs), family-oriented with 2-3 family members. 32% purchase laptops. Generally stable income earners.",
-                color: "#3498db"
+                name: "M1 enthusiasts",
+                description: "Strong interest in the Apple ecosystem; likely to engage with M1 messaging.",
+                color: "#667eea"
             },
             1: {
-                name: "Young Singles",
-                description: "Ages ~37, experienced professionals (3.8 yrs), mostly single or small families (1-2 members). Very low laptop purchase rate (0%). Career-focused but not interested in laptops.",
+                name: "Price-conscious buyers",
+                description: "Sensitive to price; messaging on value and longevity may resonate.",
                 color: "#e74c3c"
             },
             2: {
-                name: "Young Families",
-                description: "Ages ~26, low work experience (2.3 yrs), larger families (4+ members). Minimal laptop purchases (0.4%). Budget-conscious, family-focused.",
-                color: "#f39c12"
+                name: "Mac ecosystem users",
+                description: "Existing Mac-aligned behaviour; natural audience for M1 upgrades.",
+                color: "#27ae60"
             },
             3: {
-                name: "General Population",
-                description: "Ages ~46, moderate experience (2.5 yrs), family-oriented (2-3 members). Moderate laptop purchase rate (27%). Largest segment representing diverse customers.",
-                color: "#9b59b6"
+                name: "General market",
+                description: "Broad profile with moderate signals across features.",
+                color: "#f39c12"
             },
             4: {
-                name: "Senior Buyers",
-                description: "Ages ~73, low work experience (1.2 yrs), small families (2 members). Highest laptop purchase rate (57.5%)! Senior citizens who actively purchase technology.",
-                color: "#27ae60"
+                name: "Tech professionals",
+                description: "Performance- and workflow-oriented; likely to weigh specs heavily.",
+                color: "#9b59b6"
             }
         };
 
@@ -486,86 +574,106 @@
         const closeModalBtn = document.getElementById('closeModal');
         const loadingDiv = document.getElementById('loading');
 
-        // Close modal when X button is clicked
         closeModalBtn.addEventListener('click', () => {
             resultsModal.classList.remove('show');
         });
 
-        // Close modal when clicking outside the modal content
         resultsModal.addEventListener('click', (e) => {
             if (e.target === resultsModal) {
                 resultsModal.classList.remove('show');
             }
         });
 
+        function parseApiError(payload, status) {
+            if (!payload || typeof payload !== 'object') {
+                return `Request failed (HTTP ${status}).`;
+            }
+            if (payload.error) {
+                return String(payload.error);
+            }
+            if (Array.isArray(payload.detail)) {
+                return payload.detail
+                    .map((d) => (typeof d === 'object' && d.msg ? d.msg : JSON.stringify(d)))
+                    .join(' ');
+            }
+            if (payload.detail) {
+                return String(payload.detail);
+            }
+            return `Request failed (HTTP ${status}).`;
+        }
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorDiv.classList.remove('show');
             resultsModal.classList.remove('show');
-            loadingDiv.textContent = 'Making prediction...';
+            loadingDiv.textContent = 'Calling API…';
 
             const formData = new FormData(form);
             const params = new URLSearchParams();
-
             formData.forEach((value, key) => {
-                params.append(key, value);
+                if (value !== '') {
+                    params.append(key, value);
+                }
             });
 
             try {
-                const response = await fetch(`${API_URL}?${params}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
+                const response = await fetch(`${API_PREDICT_URL}?${params.toString()}`, {
+                    method: 'GET'
                 });
 
                 loadingDiv.textContent = '';
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                const rawText = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch {
+                    throw new Error(rawText.slice(0, 200) || `HTTP ${response.status}`);
                 }
 
-                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(parseApiError(data, response.status));
+                }
 
-                // Display results
                 displayResults(data);
                 resultsModal.classList.add('show');
-
             } catch (error) {
                 loadingDiv.textContent = '';
-                console.error('Error:', error);
-                showError(error.message || 'Failed to get prediction. Make sure the API is running on http://localhost:8000');
+                console.error(error);
+                const origin = window.location.origin;
+                showError(
+                    (error && error.message) ||
+                        `Could not reach ${API_PREDICT_URL}. Serve this page from the API (same origin) or start the server on ${origin}.`
+                );
             }
         });
 
         function displayResults(data) {
             const cluster = data.predicted_cluster;
-            const buyLaptop = data.predicted_buy_laptop;
-            const probability = (data.buy_laptop_probability * 100).toFixed(1);
+            const buyM1 = data.predicted_m1_purchase ?? data.predicted_buy_m1;
+            const p = Number(data.m1_purchase_probability);
+            const probability = Number.isFinite(p) ? (p * 100).toFixed(1) : '0.0';
 
-            // Get cluster info
             const clusterInfo = clusterDescriptions[cluster];
 
             document.getElementById('clusterResult').textContent = `Cluster ${cluster}`;
-            
-            // Display cluster description
+
+            const infoEl = document.getElementById('clusterInfo');
             if (clusterInfo) {
-                document.getElementById('clusterInfo').innerHTML = `
-                    <strong>${clusterInfo.name}</strong><br>
-                    ${clusterInfo.description}
-                `;
-            }
-            
-            const buyLaptopElement = document.getElementById('buyLaptopResult');
-            if (buyLaptop === 'Yes') {
-                buyLaptopElement.innerHTML = '<span class="buy-laptop-yes">✓ Yes</span>';
+                infoEl.innerHTML = `<strong>${clusterInfo.name}</strong><br>${clusterInfo.description}`;
             } else {
-                buyLaptopElement.innerHTML = '<span class="buy-laptop-no">✗ No</span>';
+                infoEl.textContent = 'No description defined for this cluster id.';
+            }
+
+            const buyM1Element = document.getElementById('buyM1Result');
+            if (buyM1 === 'Yes' || buyM1 === 1 || buyM1 === true) {
+                buyM1Element.innerHTML = '<span class="buy-laptop-yes">Likely to purchase M1</span>';
+            } else {
+                buyM1Element.innerHTML = '<span class="buy-laptop-no">Unlikely to purchase M1</span>';
             }
 
             document.getElementById('probabilityPercent').textContent = `${probability}%`;
-            document.getElementById('probabilityFill').style.width = `${probability}%`;
+            document.getElementById('probabilityFill').style.width = `${Math.min(100, Math.max(0, probability))}%`;
         }
 
         function showError(message) {
